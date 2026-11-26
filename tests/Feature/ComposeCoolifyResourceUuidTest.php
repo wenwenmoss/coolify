@@ -105,6 +105,6 @@ test('a COOLIFY_RESOURCE_UUID variable that the user saves still replaces the re
 
     $compose = applicationParser($application->fresh());
 
-    expect(data_get($compose, 'services.app.environment'))->not->toHaveKey('COOLIFY_RESOURCE_UUID')
+    expect(data_get($compose, 'services.app.environment.COOLIFY_RESOURCE_UUID'))->toBe('${COOLIFY_RESOURCE_UUID}')
         ->and($application->environment_variables()->where('key', 'COOLIFY_RESOURCE_UUID')->value('value'))->toBe('custom');
 });

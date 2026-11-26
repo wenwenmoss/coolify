@@ -187,7 +187,6 @@
           LOWERCASE_USER: '${SERVICE_LOWERCASEUSER_WEB}'
           UNKNOWN_MAGIC: '${SERVICE_FOO_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          NO_BRACES_VALUE: null
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: web-referenceservice00000001
           COOLIFY_FQDN: web-referenceservice00000001.10.0.0.1.sslip.io
@@ -256,9 +255,7 @@
         depends_on:
           db:
             condition: service_healthy
-        env_file:
-          - custom.env
-          - .env
+        env_file: custom.env
         container_name: web-referenceservice00000001
         restart: unless-stopped
         networks:
@@ -275,7 +272,7 @@
           MAP_NULL: null
           GHOST_URL: '${SERVICE_URL_GHOST}'
           DB_URL: 'postgres://${SERVICE_USER_DB}:${SERVICE_PASSWORD_DB}@db:5432/app'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
+          SERVICE_FQDN_API: '${SERVICE_FQDN_API}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: api-referenceservice00000001
           COOLIFY_FQDN: api-referenceservice00000001.10.0.0.1.sslip.io/api
@@ -347,8 +344,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -401,8 +396,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       www:
         image: 'nginx:alpine'
         environment:
@@ -453,8 +446,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -512,8 +503,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway:
         image: traefik/whoami
         environment:
@@ -564,8 +553,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway-ws:
         image: traefik/whoami
         environment:
@@ -617,8 +604,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       worker:
         image: 'nginx:alpine'
         command:
@@ -664,14 +649,13 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       scheduler:
         image: 'nginx:alpine'
         command:
           - sleep
           - infinity
         environment:
+          SERVICE_FQDN_WEB_8080: '${SERVICE_FQDN_WEB_8080}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: scheduler-referenceservice00000001
           COOLIFY_APP_NAME: reference
@@ -709,8 +693,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -763,8 +745,6 @@
           - 'coolify.service.subUuid=<uuid:db>'
           - coolify.service.subType=database
           - coolify.service.subName=db
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -806,8 +786,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -848,8 +826,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
     volumes:
       db-data:
         driver_opts:
@@ -1069,7 +1045,6 @@
           LOWERCASE_USER: '${SERVICE_LOWERCASEUSER_WEB}'
           UNKNOWN_MAGIC: '${SERVICE_FOO_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          NO_BRACES_VALUE: null
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: web-referenceservice00000001
           COOLIFY_FQDN: web.example.com
@@ -1145,9 +1120,7 @@
         depends_on:
           db:
             condition: service_healthy
-        env_file:
-          - custom.env
-          - .env
+        env_file: custom.env
         container_name: web-referenceservice00000001
         restart: unless-stopped
         networks:
@@ -1164,7 +1137,7 @@
           MAP_NULL: null
           GHOST_URL: '${SERVICE_URL_GHOST}'
           DB_URL: 'postgres://${SERVICE_USER_DB}:${SERVICE_PASSWORD_DB}@db:5432/app'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
+          SERVICE_FQDN_API: '${SERVICE_FQDN_API}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: api-referenceservice00000001
           COOLIFY_FQDN: api.example.com/api
@@ -1243,8 +1216,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -1304,8 +1275,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       www:
         image: 'nginx:alpine'
         environment:
@@ -1361,8 +1330,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -1427,8 +1394,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway:
         image: traefik/whoami
         environment:
@@ -1484,8 +1449,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway-ws:
         image: traefik/whoami
         environment:
@@ -1542,8 +1505,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       worker:
         image: 'nginx:alpine'
         command:
@@ -1589,14 +1550,13 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       scheduler:
         image: 'nginx:alpine'
         command:
           - sleep
           - infinity
         environment:
+          SERVICE_FQDN_WEB_8080: '${SERVICE_FQDN_WEB_8080}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: scheduler-referenceservice00000001
           COOLIFY_APP_NAME: reference
@@ -1634,8 +1594,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -1688,8 +1646,6 @@
           - 'coolify.service.subUuid=<uuid:db>'
           - coolify.service.subType=database
           - coolify.service.subName=db
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -1731,8 +1687,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -1773,8 +1727,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
     volumes:
       db-data:
         driver_opts:
@@ -1997,7 +1949,6 @@
           LOWERCASE_USER: '${SERVICE_LOWERCASEUSER_WEB}'
           UNKNOWN_MAGIC: '${SERVICE_FOO_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          NO_BRACES_VALUE: null
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: web-referenceservice00000001
           COOLIFY_FQDN: web.example.com
@@ -2073,9 +2024,7 @@
         depends_on:
           db:
             condition: service_healthy
-        env_file:
-          - custom.env
-          - .env
+        env_file: custom.env
         container_name: web-referenceservice00000001
         restart: unless-stopped
         networks:
@@ -2092,7 +2041,7 @@
           MAP_NULL: null
           GHOST_URL: '${SERVICE_URL_GHOST}'
           DB_URL: 'postgres://${SERVICE_USER_DB}:${SERVICE_PASSWORD_DB}@db:5432/app'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
+          SERVICE_FQDN_API: '${SERVICE_FQDN_API}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: api-referenceservice00000001
           COOLIFY_FQDN: api.example.com/api
@@ -2171,8 +2120,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -2232,8 +2179,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       www:
         image: 'nginx:alpine'
         environment:
@@ -2289,8 +2234,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -2355,8 +2298,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway:
         image: traefik/whoami
         environment:
@@ -2412,8 +2353,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       gateway-ws:
         image: traefik/whoami
         environment:
@@ -2470,8 +2409,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       worker:
         image: 'nginx:alpine'
         command:
@@ -2535,14 +2472,13 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       scheduler:
         image: 'nginx:alpine'
         command:
           - sleep
           - infinity
         environment:
+          SERVICE_FQDN_WEB_8080: '${SERVICE_FQDN_WEB_8080}'
           COOLIFY_RESOURCE_UUID: referenceservice00000001
           COOLIFY_CONTAINER_NAME: scheduler-referenceservice00000001
           COOLIFY_FQDN: scheduler-extra.example.com
@@ -2598,8 +2534,6 @@
         networks:
           internal: null
           referenceservice00000001: null
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -2652,8 +2586,6 @@
           - 'coolify.service.subUuid=<uuid:db>'
           - coolify.service.subType=database
           - coolify.service.subName=db
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -2695,8 +2627,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -2750,8 +2680,6 @@
           SERVICE_NAME_DB: db
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
-        env_file:
-          - .env
     volumes:
       db-data:
         driver_opts:

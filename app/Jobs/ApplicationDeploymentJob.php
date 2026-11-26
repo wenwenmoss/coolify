@@ -1026,9 +1026,8 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     }
 
     /**
-     * Gives each Compose service its env files from the repository, then Coolify's .env file, so
-     * Coolify variables override the defaults in them. A relative path is read from the directory of
-     * the Compose file, as Docker Compose does on a local machine, and is written from the project
+     * Gives each Compose service only its explicitly declared env files. A relative path is read from
+     * the Compose file directory, as Docker Compose does locally, and is written from the project
      * directory. Coolify skips a file that is not in the repository (such as a gitignored .env.local),
      * because Docker Compose stops when an env file is missing.
      */
@@ -1036,13 +1035,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     {
         $services = collect(data_get($composeFile, 'services', []));
         if ((int) $this->application->compose_parsing_version < 3) {
-            // Legacy parser versions are frozen: their services get only Coolify's .env file, as before.
-            $composeFile['services'] = $services->map(function ($service) {
-                $service['env_file'] = ['.env'];
-
-                return $service;
-            })->toArray();
-
+            // Legacy parsers keep their paths as written, without adding the project .env.
             return $composeFile;
         }
         $composeDirectory = trim(dirname($this->docker_compose_location), '/');
@@ -1057,8 +1050,10 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
         $composeFile['services'] = $services->map(function ($service, $name) use ($composeDirectory, $existingFiles) {
             $envFiles = collect(composeEnvFileEntries(data_get($service, 'env_file')))
-                ->reject(fn (mixed $entry): bool => isCoolifyComposeEnvFile($entry))
                 ->map(function (mixed $entry) use ($composeDirectory, $existingFiles, $name) {
+                    if (isCoolifyComposeEnvFile($entry)) {
+                        return $entry;
+                    }
                     $path = composeEnvFileProjectPath(composeEnvFileEntryPath($entry), $composeDirectory);
                     if ($path === null || ! in_array($path, $existingFiles, true)) {
                         $this->application_deployment_queue->addLogEntry('Warning: the env_file '.composeEnvFileEntryPath($entry)." of service {$name} is not a file in the repository. Coolify skips it.", 'stderr');
@@ -1070,7 +1065,11 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
                 })
                 ->filter()
                 ->all();
-            $service['env_file'] = composeEnvFilesWithCoolifyEnv($envFiles);
+            if ($envFiles !== []) {
+                $service['env_file'] = array_values($envFiles);
+            } else {
+                unset($service['env_file']);
+            }
 
             return $service;
         })->toArray();

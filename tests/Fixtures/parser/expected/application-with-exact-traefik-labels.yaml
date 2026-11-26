@@ -104,8 +104,6 @@
           HEX_32: '${SERVICE_HEX_32_WEB}'
           USER: '${SERVICE_USER_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
-          NO_BRACES_VALUE: null
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: web-referenceapplication0001-20260102T030405
@@ -125,6 +123,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -178,8 +177,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
         image: 'referenceapplication0001_web:abcdef0123456789abcdef0123456789abcdef01'
       api:
         image: 'node:22-alpine'
@@ -187,13 +184,13 @@
           MAP_LITERAL: map-value
           MAP_NULL: null
           MAP_EMPTY_FROM_DATABASE: production-value
+          SERVICE_FQDN_API: api-referenceapplication0001.10.0.0.1.sslip.io
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: api-referenceapplication0001-20260102T030405
           SERVICE_URL_WEB: 'http://web-referenceapplication0001.10.0.0.1.sslip.io'
           SERVICE_FQDN_WEB: web-referenceapplication0001.10.0.0.1.sslip.io
           SERVICE_URL_API: 'http://api-referenceapplication0001.10.0.0.1.sslip.io'
-          SERVICE_FQDN_API: api-referenceapplication0001.10.0.0.1.sslip.io
           SERVICE_URL_MY_APP: 'http://my-app-referenceapplication0001.10.0.0.1.sslip.io'
           SERVICE_FQDN_MY_APP: my-app-referenceapplication0001.10.0.0.1.sslip.io
           SERVICE_URL_ADMIN: 'http://admin-referenceapplication0001.10.0.0.1.sslip.io'
@@ -206,6 +203,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -252,8 +250,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -277,6 +273,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -312,8 +309,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       api.v2:
         image: traefik/whoami
         container_name: api.v2-referenceapplication0001-20260102T030405
@@ -350,6 +345,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -360,11 +356,10 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       admin:
         image: 'nginx:alpine'
         environment:
+          SERVICE_FQDN_ADMIN_8080: '${SERVICE_FQDN_ADMIN_8080}'
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: admin-referenceapplication0001-20260102T030405
@@ -384,6 +379,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -420,8 +416,6 @@
           - 'traefik.http.routers.http-0-referenceapplication0001-admin-2123.rule=Host(`admin-referenceapplication0001.10.0.0.1.sslip.io`) && PathPrefix(`/`)'
           - traefik.http.routers.http-0-referenceapplication0001-admin-2123.service=http-0-referenceapplication0001-admin-2123
           - traefik.http.services.http-0-referenceapplication0001-admin-2123.loadbalancer.server.port=8080
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -445,6 +439,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -483,8 +478,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -508,6 +501,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -541,8 +535,6 @@
           - coolify.serviceName=reference
           - coolify.environmentName=production
           - coolify.pullRequestId=0
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -580,6 +572,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -590,8 +583,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -628,6 +619,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -638,8 +630,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       worker:
         image: 'node:22-alpine'
         command:
@@ -666,6 +656,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -694,8 +685,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
     volumes:
       web-data: {}
       db-data:
@@ -838,8 +827,6 @@
           HEX_32: '${SERVICE_HEX_32_WEB}'
           USER: '${SERVICE_USER_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
-          NO_BRACES_VALUE: null
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: web-referenceapplication0001-20260102T030405
@@ -861,6 +848,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -921,8 +909,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
         image: 'referenceapplication0001_web:abcdef0123456789abcdef0123456789abcdef01'
       api:
         image: 'node:22-alpine'
@@ -930,13 +916,13 @@
           MAP_LITERAL: map-value
           MAP_NULL: null
           MAP_EMPTY_FROM_DATABASE: production-value
+          SERVICE_FQDN_API: www.api.example.com
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: api-referenceapplication0001-20260102T030405
           SERVICE_URL_WEB: 'https://web.example.com'
           SERVICE_FQDN_WEB: web.example.com
           SERVICE_URL_API: 'https://www.api.example.com'
-          SERVICE_FQDN_API: www.api.example.com
           SERVICE_URL_MY_APP: 'https://my-app.example.com'
           SERVICE_FQDN_MY_APP: my-app.example.com
           SERVICE_URL_ADMIN: 'https://admin.example.com'
@@ -951,6 +937,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1007,8 +994,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -1034,6 +1019,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1076,8 +1062,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       api.v2:
         image: traefik/whoami
         container_name: api.v2-referenceapplication0001-20260102T030405
@@ -1130,6 +1114,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1140,11 +1125,10 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       admin:
         image: 'nginx:alpine'
         environment:
+          SERVICE_FQDN_ADMIN_8080: '${SERVICE_FQDN_ADMIN_8080}'
           COOLIFY_BRANCH: '"main"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: admin-referenceapplication0001-20260102T030405
@@ -1166,6 +1150,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1209,8 +1194,6 @@
           - traefik.http.routers.https-0-referenceapplication0001-admin-2123.tls=true
           - traefik.http.services.http-0-referenceapplication0001-admin-2123.loadbalancer.server.port=8080
           - traefik.http.services.https-0-referenceapplication0001-admin-2123.loadbalancer.server.port=8080
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -1236,6 +1219,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1279,8 +1263,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -1306,6 +1288,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1339,8 +1322,6 @@
           - coolify.serviceName=reference
           - coolify.environmentName=production
           - coolify.pullRequestId=0
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -1380,6 +1361,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1390,8 +1372,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -1430,6 +1410,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1440,8 +1421,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       worker:
         image: 'node:22-alpine'
         command:
@@ -1470,6 +1449,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1498,8 +1478,6 @@
         networks:
           internal: null
           referenceapplication0001: null
-        env_file:
-          - .env
     volumes:
       web-data: {}
       db-data:
@@ -1665,8 +1643,6 @@
           HEX_32: '${SERVICE_HEX_32_WEB}'
           USER: '${SERVICE_USER_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
-          NO_BRACES_VALUE: null
           COOLIFY_BRANCH: '"pull/7/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: web-referenceapplication0001-pr-7
@@ -1688,6 +1664,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1751,8 +1728,6 @@
           referenceapplication0001-7:
             aliases:
               - web-pr-7
-        env_file:
-          - .env
         image: 'referenceapplication0001_web:pr-7'
       api:
         image: 'node:22-alpine'
@@ -1760,13 +1735,13 @@
           MAP_LITERAL: map-value
           MAP_NULL: null
           MAP_EMPTY_FROM_DATABASE: preview-value
+          SERVICE_FQDN_API: 7.www.api.example.com
           COOLIFY_BRANCH: '"pull/7/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: api-referenceapplication0001-pr-7
           SERVICE_URL_WEB: 'https://7.web.example.com'
           SERVICE_FQDN_WEB: 7.web.example.com
           SERVICE_URL_API: 'https://7.www.api.example.com'
-          SERVICE_FQDN_API: 7.www.api.example.com
           SERVICE_URL_MY_APP: 'https://7.my-app.example.com'
           SERVICE_FQDN_MY_APP: 7.my-app.example.com
           SERVICE_URL_ADMIN: 'https://7.admin.example.com'
@@ -1781,6 +1756,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1837,8 +1813,6 @@
           referenceapplication0001-7:
             aliases:
               - api-pr-7
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -1864,6 +1838,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1909,8 +1884,6 @@
           referenceapplication0001-7:
             aliases:
               - my-app-pr-7
-        env_file:
-          - .env
       api.v2:
         image: traefik/whoami
         container_name: api.v2-referenceapplication0001-pr-7
@@ -1966,6 +1939,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -1976,11 +1950,10 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       admin:
         image: 'nginx:alpine'
         environment:
+          SERVICE_FQDN_ADMIN_8080: '${SERVICE_FQDN_ADMIN_8080}'
           COOLIFY_BRANCH: '"pull/7/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: admin-referenceapplication0001-pr-7
@@ -2002,6 +1975,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2048,8 +2022,6 @@
           - traefik.http.routers.https-0-referenceapplication0001-7-admin-2123.tls=true
           - traefik.http.services.http-0-referenceapplication0001-7-admin-2123.loadbalancer.server.port=8080
           - traefik.http.services.https-0-referenceapplication0001-7-admin-2123.loadbalancer.server.port=8080
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -2075,6 +2047,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2121,8 +2094,6 @@
           referenceapplication0001-7:
             aliases:
               - blog-pr-7
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -2148,6 +2119,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2183,8 +2155,6 @@
           - coolify.serviceName=reference
           - coolify.environmentName=production
           - coolify.pullRequestId=7
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -2226,6 +2196,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2236,8 +2207,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -2276,6 +2245,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2286,8 +2256,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       worker:
         image: 'node:22-alpine'
         command:
@@ -2316,6 +2284,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2346,8 +2315,6 @@
           referenceapplication0001-7:
             aliases:
               - worker-pr-7
-        env_file:
-          - .env
     volumes:
       web-data: {}
       db-data:
@@ -2511,8 +2478,6 @@
           HEX_32: '${SERVICE_HEX_32_WEB}'
           USER: '${SERVICE_USER_WEB}'
           API_URL: '${SERVICE_URL_API}'
-          BUILD_VERSION: '${BUILD_VERSION:-1.0.0}'
-          NO_BRACES_VALUE: null
           COOLIFY_BRANCH: '"pull/8/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: web-referenceapplication0001-pr-8
@@ -2520,6 +2485,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2566,8 +2532,6 @@
           referenceapplication0001-8:
             aliases:
               - web-pr-8
-        env_file:
-          - .env
         image: 'referenceapplication0001_web:pr-8'
       api:
         image: 'node:22-alpine'
@@ -2575,6 +2539,7 @@
           MAP_LITERAL: map-value
           MAP_NULL: null
           MAP_EMPTY_FROM_DATABASE: preview-value
+          SERVICE_FQDN_API: '${SERVICE_FQDN_API}'
           COOLIFY_BRANCH: '"pull/8/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: api-referenceapplication0001-pr-8
@@ -2582,6 +2547,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2621,8 +2587,6 @@
           referenceapplication0001-8:
             aliases:
               - api-pr-8
-        env_file:
-          - .env
       my-app:
         image: 'httpd:2.4-alpine'
         environment:
@@ -2634,6 +2598,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2662,8 +2627,6 @@
           referenceapplication0001-8:
             aliases:
               - my-app-pr-8
-        env_file:
-          - .env
       api.v2:
         image: traefik/whoami
         container_name: api.v2-referenceapplication0001-pr-8
@@ -2692,6 +2655,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2702,11 +2666,10 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       admin:
         image: 'nginx:alpine'
         environment:
+          SERVICE_FQDN_ADMIN_8080: '${SERVICE_FQDN_ADMIN_8080}'
           COOLIFY_BRANCH: '"pull/8/head"'
           COOLIFY_RESOURCE_UUID: referenceapplication0001
           COOLIFY_CONTAINER_NAME: admin-referenceapplication0001-pr-8
@@ -2714,6 +2677,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2743,8 +2707,6 @@
           - coolify.serviceName=reference
           - coolify.environmentName=production
           - coolify.pullRequestId=8
-        env_file:
-          - .env
       blog:
         image: 'ghost:5-alpine'
         environment:
@@ -2756,6 +2718,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2784,8 +2747,6 @@
           referenceapplication0001-8:
             aliases:
               - blog-pr-8
-        env_file:
-          - .env
       db:
         image: 'postgres:16-alpine'
         environment:
@@ -2799,6 +2760,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2834,8 +2796,6 @@
           - coolify.serviceName=reference
           - coolify.environmentName=production
           - coolify.pullRequestId=8
-        env_file:
-          - .env
       cache:
         image: 'redis:7-alpine'
         networks:
@@ -2865,6 +2825,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2875,8 +2836,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       sidecar:
         image: busybox
         restart: 'no'
@@ -2903,6 +2862,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2913,8 +2873,6 @@
           SERVICE_NAME_CACHE: cache
           SERVICE_NAME_SIDECAR: sidecar
           SERVICE_NAME_WORKER: worker
-        env_file:
-          - .env
       worker:
         image: 'node:22-alpine'
         command:
@@ -2931,6 +2889,7 @@
           COOLIFY_PROJECT_NAME: 'Reference Project'
           COOLIFY_ENVIRONMENT_NAME: production
           COOLIFY_SERVER_IP: 10.0.0.1
+          SOURCE_COMMIT: '${SOURCE_COMMIT}'
           SERVICE_NAME_WEB: web
           SERVICE_NAME_API: api
           SERVICE_NAME_MY_APP: my-app
@@ -2961,8 +2920,6 @@
           referenceapplication0001-8:
             aliases:
               - worker-pr-8
-        env_file:
-          - .env
     volumes:
       web-data: {}
       db-data:

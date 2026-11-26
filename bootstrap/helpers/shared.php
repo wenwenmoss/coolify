@@ -3909,7 +3909,7 @@ function parseDockerComposeFile(Service|Application $resource, bool $isNew = fal
             $serviceDependencies = collect(data_get($service, 'depends_on', []));
             $serviceLabels = collect(data_get($service, 'labels', []));
             $serviceBuildVariables = collect(data_get($service, 'build.args', []));
-            $serviceVariables = $serviceVariables->merge($serviceBuildVariables);
+            $serviceVariables = convertToKeyValueCollection($serviceBuildVariables)->merge(convertToKeyValueCollection($serviceVariables));
             if ($serviceLabels->count() > 0) {
                 $removedLabels = collect([]);
                 $serviceLabels = $serviceLabels->filter(function ($serviceLabel, $serviceLabelName) use ($removedLabels) {
@@ -4613,6 +4613,25 @@ function parseDockerComposeFile(Service|Application $resource, bool $isNew = fal
             data_forget($service, 'volumes.*.isDirectory');
             data_forget($service, 'volumes.*.is_directory');
             data_forget($service, 'exclude_from_hc');
+            $serviceVariables = composeRuntimeEnvironment(
+                convertToKeyValueCollection($serviceVariables),
+                data_get($service, 'environment', []),
+            );
+            foreach (extractDockerComposePassthroughKeys(data_get($service, 'environment', [])) as $key) {
+                $serviceVariables->put($key, null);
+            }
+            $serviceVariables = collect([
+                'COOLIFY_RESOURCE_UUID' => '${COOLIFY_RESOURCE_UUID}',
+                'COOLIFY_CONTAINER_NAME' => $containerName,
+                'SOURCE_COMMIT' => '${SOURCE_COMMIT}',
+                'COOLIFY_BRANCH' => '${COOLIFY_BRANCH}',
+                'COOLIFY_URL' => '${COOLIFY_URL}',
+                'COOLIFY_FQDN' => '${COOLIFY_FQDN}',
+            ])->merge(coolifyDefaultEnvironmentVariables($resource)->map(fn ($value, $key) => '${'.$key.'}'))
+                ->merge($serviceVariables);
+            if ($resource->environment_variables->contains('key', 'COOLIFY_CONTAINER_NAME')) {
+                $serviceVariables->put('COOLIFY_CONTAINER_NAME', '${COOLIFY_CONTAINER_NAME}');
+            }
             data_set($service, 'environment', $serviceVariables->toArray());
 
             return $service;

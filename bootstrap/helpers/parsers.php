@@ -199,19 +199,29 @@ function isCoolifyComposeEnvFile(mixed $entry): bool
 }
 
 /**
- * The `env_file` list of a Compose service with Coolify's .env file at the end. The env files of the
- * user stay in front of it, so Coolify variables override the values in them.
+ * Keep interpolation inputs and build arguments out of the container unless the service declares
+ * them in environment. Routing metadata is safe to share; generated SERVICE_PASSWORD_* and
+ * SERVICE_USER_* variables are interpolation inputs, not metadata.
  *
- * @return list<string|array<string, mixed>>
+ * @param  Collection<string, mixed>  $environment
+ * @return Collection<string, mixed>
  */
-function composeEnvFilesWithCoolifyEnv(mixed $envFile): array
+function composeRuntimeEnvironment(Collection $environment, mixed $declaredEnvironment): Collection
 {
-    return collect(composeEnvFileEntries($envFile))
-        ->reject(fn (mixed $entry): bool => isCoolifyComposeEnvFile($entry))
-        ->push('.env')
-        ->unique()
-        ->values()
-        ->all();
+    $declaredKeys = convertToKeyValueCollection(collect($declaredEnvironment))->keys();
+
+    $environment = $environment->filter(fn (mixed $value, string $key): bool => $declaredKeys->contains($key)
+        || isCoolifyProvidedComposeVariable($key)
+        || str_starts_with($key, 'SERVICE_URL_')
+        || str_starts_with($key, 'SERVICE_FQDN_')
+        || str_starts_with($key, 'SERVICE_NAME_'));
+    foreach ($declaredKeys as $key) {
+        if (str_starts_with($key, 'SERVICE_FQDN_') && ! $environment->has($key)) {
+            $environment->put($key, '${'.$key.'}');
+        }
+    }
+
+    return $environment;
 }
 
 /**
@@ -1700,9 +1710,7 @@ function applicationParser(Application $resource, int $pull_request_id = 0, ?int
         $environment = collect(data_get($service, 'environment', []));
         $ports = collect(data_get($service, 'ports', []));
         $buildArgs = collect(data_get($service, 'build.args', []));
-        $environment = $environment->merge($buildArgs);
-
-        $environment = convertToKeyValueCollection($environment);
+        $environment = convertToKeyValueCollection($buildArgs)->merge(convertToKeyValueCollection($environment));
         $coolifyEnvironments = collect([]);
 
         $isDatabase = isDatabaseImage($image, $service);
@@ -2298,6 +2306,13 @@ function applicationParser(Application $resource, int $pull_request_id = 0, ?int
         $userDefinedKeys = $resource->environment_variables->pluck('key')->merge($environment->keys());
         coolifyDefaultEnvironmentVariables($resource, $userDefinedKeys)
             ->each(fn ($value, $key) => $coolifyEnvironments->put($key, escapeDollarSign($value)));
+        $resource->environment_variables->pluck('key')
+            ->filter(fn (string $key): bool => isCoolifyProvidedComposeVariable($key))
+            ->reject(fn (string $key): bool => $environment->has($key))
+            ->each(fn (string $key) => $coolifyEnvironments->put($key, '${'.$key.'}'));
+        if (! $environment->has('SOURCE_COMMIT')) {
+            $coolifyEnvironments->put('SOURCE_COMMIT', '${SOURCE_COMMIT}');
+        }
         if ($environment->count() > 0) {
             $environment = $environment->filter(function ($value, $key) {
                 return ! str($key)->startsWith('SERVICE_FQDN_');
@@ -2489,6 +2504,7 @@ function applicationParser(Application $resource, int $pull_request_id = 0, ?int
             $payload['volumes'] = $volumesParsed;
         }
         if ($environment->count() > 0 || $coolifyEnvironments->count() > 0) {
+            $environment = composeRuntimeEnvironment($environment, data_get($service, 'environment', []));
             $environment = preserveLegacyDockerComposeNullAssignments($environment, $legacyNullEnvironmentVariables);
             $payload['environment'] = $environment->merge($coolifyEnvironments)->merge($serviceNameEnvironments);
         }
@@ -2503,9 +2519,6 @@ function applicationParser(Application $resource, int $pull_request_id = 0, ?int
         if ($depends_on->count() > 0) {
             $payload['depends_on'] = $depends_on;
         }
-        // Auto-inject .env file so Coolify environment variables are available inside containers
-        // This makes Applications behave consistently with manual .env file usage
-        $payload['env_file'] = composeEnvFilesWithCoolifyEnv(data_get($service, 'env_file'));
 
         // Inject commit-based image tag for services with build directive (for rollback support)
         // Only inject if service has build but no explicit image defined
@@ -3070,9 +3083,7 @@ function serviceParser(Service $resource): Collection
         $environment = collect(data_get($service, 'environment', []));
         $ports = collect(data_get($service, 'ports', []));
         $buildArgs = collect(data_get($service, 'build.args', []));
-        $environment = $environment->merge($buildArgs);
-
-        $environment = convertToKeyValueCollection($environment);
+        $environment = convertToKeyValueCollection($buildArgs)->merge(convertToKeyValueCollection($environment));
         $coolifyEnvironments = collect([]);
 
         $savedService = resolveServicePart($resource, (string) $serviceName, isDatabaseImage($image, $service));
@@ -3583,6 +3594,10 @@ function serviceParser(Service $resource): Collection
         $userDefinedKeys = $resource->environment_variables->pluck('key')->merge($environment->keys());
         coolifyDefaultEnvironmentVariables($resource, $userDefinedKeys)
             ->each(fn ($value, $key) => $coolifyEnvironments->put($key, escapeDollarSign($value)));
+        $resource->environment_variables->pluck('key')
+            ->filter(fn (string $key): bool => isCoolifyProvidedComposeVariable($key))
+            ->reject(fn (string $key): bool => $environment->has($key))
+            ->each(fn (string $key) => $coolifyEnvironments->put($key, '${'.$key.'}'));
         if ($environment->count() > 0) {
             $environment = $environment->filter(function ($value, $key) {
                 return ! str($key)->startsWith('SERVICE_FQDN_');
@@ -3749,6 +3764,7 @@ function serviceParser(Service $resource): Collection
             $payload['volumes'] = $volumesParsed;
         }
         if ($environment->count() > 0 || $coolifyEnvironments->count() > 0) {
+            $environment = composeRuntimeEnvironment($environment, data_get($service, 'environment', []));
             $environment = preserveLegacyDockerComposeNullAssignments($environment, $legacyNullEnvironmentVariables);
             $payload['environment'] = $environment->merge($coolifyEnvironments)->merge($serviceNameEnvironments);
         }
@@ -3758,9 +3774,6 @@ function serviceParser(Service $resource): Collection
         if ($depends_on->count() > 0) {
             $payload['depends_on'] = $depends_on;
         }
-        // Auto-inject .env file so Coolify environment variables are available inside containers
-        // This makes Services behave consistently with Applications
-        $payload['env_file'] = composeEnvFilesWithCoolifyEnv(data_get($service, 'env_file'));
 
         $parsedServices->put($serviceName, $payload);
     }
