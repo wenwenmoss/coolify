@@ -454,7 +454,7 @@ class CleanupStuckedResources extends Command
             echo "Error in serviceApplications: {$e->getMessage()}\n";
         }
         try {
-            $serviceDatabases = ServiceDatabase::query()->whereDoesntHave('service')->lazyById();
+            $serviceDatabases = ServiceDatabase::query()->whereDoesntHave('service')->whereDoesntHave('application')->lazyById();
             foreach ($serviceDatabases as $service) {
                 echo 'ServiceDatabase without service: '.$service->name.'\n';
                 $service->forceDelete();

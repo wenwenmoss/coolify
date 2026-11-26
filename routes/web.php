@@ -644,7 +644,7 @@ Route::middleware(['auth'])->group(function () {
             $filename = data_get($execution, 'filename');
             if (! $execution->local_storage_deleted && filled($filename)) {
                 if ($execution->scheduledDatabaseBackup->database->getMorphClass() === ServiceDatabase::class) {
-                    $server = $execution->scheduledDatabaseBackup->database->service->destination->server;
+                    $server = $execution->scheduledDatabaseBackup->database->server();
                 } else {
                     $server = $execution->scheduledDatabaseBackup->database->destination->server;
                 }

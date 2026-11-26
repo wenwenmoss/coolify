@@ -326,12 +326,12 @@ class ImportForm extends Component
 
         // Handle ServiceDatabase server access differently
         if ($resource->getMorphClass() === ServiceDatabase::class) {
-            $server = $resource->service?->server;
+            $server = $resource->server();
             if (! $server) {
                 abort(404, 'Server not found for this service database.');
             }
             $this->serverId = $server->id;
-            $this->container = $resource->name.'-'.$resource->service->uuid;
+            $this->container = $resource->backupContainerName();
             $this->resourceUuid = $resource->uuid; // Use ServiceDatabase's own UUID
 
             // Determine database type for ServiceDatabase

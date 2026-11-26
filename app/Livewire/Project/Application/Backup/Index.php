@@ -45,7 +45,11 @@ class Index extends Component
             ->latest()
             ->get();
 
-        return view('livewire.project.application.backup.index', ['backups' => $backups]);
+        return view('livewire.project.application.backup.index', [
+            'backups' => $backups,
+            'databases' => $this->application->databases()->withCount('scheduledBackups')->get()
+                ->filter(fn ($database) => $database->isBackupSolutionAvailable() || $database->scheduled_backups_count > 0),
+        ]);
     }
 
     private function findApplication(): Application

@@ -33,6 +33,15 @@ class ComplexStatusCheck
                 .'; [ -z "$container_ids" ] || docker container inspect $container_ids --format \'{{json .}}\'';
             $containers = instant_remote_process(['sh -c '.escapeshellarg($script)], $server, false);
             $containers = format_docker_command_output_to_json($containers);
+            if ($is_main_server && $application->build_pack === 'dockercompose') {
+                $statuses = $containers->reject(fn ($container) => filter_var(
+                    collect(data_get($container, 'Config.Labels', []))->get('com.docker.compose.oneoff', false),
+                    FILTER_VALIDATE_BOOLEAN,
+                ))->mapWithKeys(fn ($container) => [
+                    collect(data_get($container, 'Config.Labels', []))->get('com.docker.compose.service') => ContainerStatusAggregator::containerStatus($container),
+                ]);
+                $application->syncComposeDatabaseStatuses($statuses);
+            }
 
             if ($containers->count() > 0) {
                 $statusToSet = $this->aggregateContainerStatuses($application, $containers);

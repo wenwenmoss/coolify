@@ -81,7 +81,7 @@ class StartDatabaseImport
         // Same folders as DatabaseBackupJob. S3 keys are the local backup path without the leading slash.
         // The folder names end with the team ID and the database container name, so a rename keeps old backups.
         $directorySuffix = $resource instanceof ServiceDatabase
-            ? $resource->name.'-'.$resource->service?->uuid
+            ? $resource->backupContainerName()
             : $resource->uuid;
         $pattern = '#^'.preg_quote(backup_dir().'/databases/', '#').'[^/]*-'.preg_quote((string) $teamId, '#')
             .'/[^/]*-'.preg_quote((string) $directorySuffix, '#').'/[^/]+$#';
@@ -91,6 +91,9 @@ class StartDatabaseImport
 
     public function handle(Model $resource, DatabaseImportSource $source, int $teamId): Activity
     {
+        if ($resource instanceof ServiceDatabase && $resource->application_id !== null && $resource->is_removed_from_compose) {
+            throw new DatabaseImportException('The database is no longer present in the Compose file.');
+        }
         if (! $this->commands->supports($resource)) {
             throw new DatabaseImportException('Database imports are not supported for this database type.');
         }
@@ -100,7 +103,7 @@ class StartDatabaseImport
         $sqliteDatabase = $this->sqliteRestoreTarget($resource, $source);
 
         [$server, $container, $network] = $this->target($resource);
-        $destination = $resource instanceof ServiceDatabase ? $resource->service?->destination : $resource->destination;
+        $destination = $resource instanceof ServiceDatabase ? $resource->parentResource()?->destination : $resource->destination;
         if ($destination instanceof SwarmDocker) {
             throw new DatabaseImportException('Database imports are not supported for Swarm servers yet.', 501);
         }
@@ -244,7 +247,7 @@ class StartDatabaseImport
     private function target(Model $resource): array
     {
         if ($resource instanceof ServiceDatabase) {
-            return [$resource->service?->server, $resource->name.'-'.$resource->service?->uuid, $resource->service?->destination?->network ?? 'coolify'];
+            return [$resource->server(), $resource->containerName(), $resource->parentResource()?->destination?->network ?? 'coolify'];
         }
 
         return [$resource->destination?->server, $resource->uuid, $resource->destination?->network ?? 'coolify'];

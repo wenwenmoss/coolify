@@ -307,6 +307,11 @@ class ServerTransferExporter
         }
 
         foreach ($applications as $application) {
+            foreach ($application->databases()->with('scheduledBackups.s3Storages')->get() as $database) {
+                foreach ($database->scheduledBackups as $backup) {
+                    $collectBackupS3($backup);
+                }
+            }
             $application->loadMissing(['persistentStorages.scheduledBackups', 'fileStorages.scheduledBackups', 'previews.persistentStorages.scheduledBackups']);
             $collectVolumeS3($application);
             foreach ($application->previews as $preview) {
@@ -982,6 +987,7 @@ class ServerTransferExporter
         }
 
         return [
+            'compose_databases' => $application->databases()->get()->map(fn ($database) => $this->exportServiceDatabase($database))->all(),
             'type' => 'application',
             'uuid' => $application->uuid,
             'destination_uuid' => $destinationUuidByKey[$destinationKey] ?? null,
@@ -1186,7 +1192,7 @@ class ServerTransferExporter
         $columns = Schema::getColumnListing($db->getTable());
         $attrs = [];
         foreach ($db->getFillable() as $field) {
-            if (in_array($field, ['id', 'created_at', 'updated_at', 'deleted_at', 'service_id'], true)) {
+            if (in_array($field, ['id', 'created_at', 'updated_at', 'deleted_at', 'service_id', 'application_id'], true)) {
                 continue;
             }
             if (! in_array($field, $columns, true)) {
@@ -1742,6 +1748,9 @@ class ServerTransferExporter
         $resources = [];
         foreach ($applications as $application) {
             $resources[$application->getMorphClass().':'.$application->id] = ['application', $application->uuid];
+            foreach ($application->databases as $database) {
+                $resources[$database->getMorphClass().':'.$database->id] = ['service_database', $database->uuid];
+            }
         }
         foreach ($databases as $database) {
             $resources[$database->getMorphClass().':'.$database->id] = ['database', $database->uuid];

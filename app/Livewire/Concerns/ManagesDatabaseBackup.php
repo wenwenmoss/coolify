@@ -57,6 +57,10 @@ trait ManagesDatabaseBackup
         ]);
         $this->dispatch('success', 'Backup queued. It will be available in a few minutes.');
 
+        if ($database instanceof ServiceDatabase && $database->application_id !== null) {
+            return null;
+        }
+
         if ($database instanceof ServiceDatabase) {
             return redirect()->route('project.service.database.backup.executions', [
                 'project_uuid' => $database->service->project()->uuid,

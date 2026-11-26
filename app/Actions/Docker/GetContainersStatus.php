@@ -485,6 +485,14 @@ class GetContainersStatus implements ShouldBeUnique
 
         $this->trackPreviewRestartCounts($previews);
 
+        if ($this->containers->isNotEmpty()) {
+            foreach ($this->applications as $application) {
+                if ($application->build_pack === 'dockercompose' && $application->destination?->server_id === $this->server->id) {
+                    $application->syncComposeDatabaseStatuses(isset($this->applicationContainerStatuses) ? $this->applicationContainerStatuses->get($application->id, collect()) : collect());
+                }
+            }
+        }
+
         // Aggregate multi-container application statuses
         if (isset($this->applicationContainerStatuses) && $this->applicationContainerStatuses->isNotEmpty()) {
             foreach ($this->applicationContainerStatuses as $applicationId => $containerStatuses) {

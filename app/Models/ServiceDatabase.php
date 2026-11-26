@@ -12,6 +12,7 @@ class ServiceDatabase extends BaseModel
 
     protected $fillable = [
         'service_id',
+        'application_id',
         'name',
         'human_name',
         'description',
@@ -85,8 +86,8 @@ class ServiceDatabase extends BaseModel
 
     public function restart()
     {
-        $container_id = $this->name.'-'.$this->service->uuid;
-        remote_process(['docker restart '.escapeshellarg($container_id)], $this->service->server);
+        $container_id = $this->containerName();
+        remote_process(['docker restart '.escapeshellarg($container_id)], $this->server());
     }
 
     public function isRunning()
@@ -148,8 +149,8 @@ class ServiceDatabase extends BaseModel
     public function getServiceDatabaseUrl()
     {
         $port = $this->public_port;
-        $realIp = $this->service->server->ip;
-        if ($this->service->server->isLocalhost() || isDev()) {
+        $realIp = $this->server()->ip;
+        if ($this->server()->isLocalhost() || isDev()) {
             $realIp = base_ip();
         }
 
@@ -158,12 +159,58 @@ class ServiceDatabase extends BaseModel
 
     public function team()
     {
-        return data_get($this, 'service.environment.project.team');
+        return $this->parentResource()?->team();
     }
 
     public function workdir()
     {
-        return service_configuration_dir()."/{$this->service->uuid}";
+        return $this->parentResource()->workdir();
+    }
+
+    public function application()
+    {
+        return $this->belongsTo(Application::class);
+    }
+
+    public function parentResource(): Service|Application|null
+    {
+        return $this->application_id !== null ? $this->application : $this->service;
+    }
+
+    public function server(): ?Server
+    {
+        $parent = $this->parentResource();
+
+        return $parent instanceof Application ? $parent->destination?->server : $parent?->server;
+    }
+
+    /**
+     * Stable across Git deployments, whose actual container names can contain a timestamp.
+     */
+    public function backupContainerName(): string
+    {
+        return $this->name.'-'.$this->parentResource()?->uuid;
+    }
+
+    public function containerName(): string
+    {
+        if ($this->application_id === null) {
+            return $this->backupContainerName();
+        }
+
+        $containers = getCurrentApplicationContainerStatus($this->server(), $this->application)
+            ->filter(function ($container) {
+                $labels = format_docker_labels_to_json(data_get($container, 'Labels', []));
+
+                return $labels->get('com.docker.compose.service') === $this->name
+                    && ! filter_var($labels->get('com.docker.compose.oneoff', false), FILTER_VALIDATE_BOOLEAN);
+            });
+        $container = selectServingContainer($containers);
+        if (! $container) {
+            throw new \RuntimeException('The Compose database has no running production container.');
+        }
+
+        return data_get($container, 'Names');
     }
 
     public function service()
@@ -173,7 +220,7 @@ class ServiceDatabase extends BaseModel
 
     public function link(): ?string
     {
-        return $this->service?->link();
+        return $this->parentResource()?->link();
     }
 
     public function persistentStorages()
@@ -198,6 +245,10 @@ class ServiceDatabase extends BaseModel
 
     public function isBackupSolutionAvailable()
     {
+        if ($this->application_id !== null && $this->is_removed_from_compose) {
+            return false;
+        }
+
         return str($this->databaseType())->contains('mysql') ||
             str($this->databaseType())->contains('postgres') ||
             str($this->databaseType())->contains('postgis') ||

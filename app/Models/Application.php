@@ -458,6 +458,9 @@ class Application extends BaseModel
         });
         static::forceDeleting(function ($application) {
             $application->update(['fqdn' => null]);
+            foreach ($application->databases()->withTrashed()->get() as $database) {
+                $database->forceDelete();
+            }
             $application->settings()->delete();
             $application->persistentStorages()->delete();
             $application->environment_variables()->delete();
@@ -2827,6 +2830,49 @@ class Application extends BaseModel
         }
 
         return $warnings;
+    }
+
+    public function databases(): HasMany
+    {
+        return $this->hasMany(ServiceDatabase::class);
+    }
+
+    /**
+     * Register only production databases. Preview Compose files must not change backup targets.
+     */
+    public function syncComposeDatabases(array $services): void
+    {
+        $names = [];
+        foreach ($services as $name => $service) {
+            $image = data_get($service, 'image');
+            if (! isDatabaseImage($image, $service)) {
+                continue;
+            }
+            $names[] = $name;
+            $database = $this->databases()->firstOrCreate(['name' => $name], ['image' => $image]);
+            $database->forceFill([
+                'image' => $image,
+                'is_removed_from_compose' => false,
+            ])->save();
+        }
+        $this->databases()->whereNotIn('name', $names)->update([
+            'is_removed_from_compose' => true,
+            'status' => 'exited',
+        ]);
+        $this->unsetRelation('databases');
+    }
+
+    /**
+     * @param  Collection<string, string>  $statuses  Production statuses keyed by Compose service name
+     */
+    public function syncComposeDatabaseStatuses(Collection $statuses): void
+    {
+        foreach ($this->databases as $database) {
+            $status = $database->is_removed_from_compose ? 'exited' : $statuses->get($database->name, 'exited');
+            if ($database->status !== $status) {
+                $database->update(['status' => $status]);
+            }
+        }
     }
 
     public function parse(int $pull_request_id = 0, ?int $preview_id = null, ?string $commit = null)

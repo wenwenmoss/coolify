@@ -1831,9 +1831,9 @@ function getResourceByUuid(string $uuid, ?int $teamId = null)
         return null;
     }
 
-    // ServiceDatabase has a different relationship path: service->environment->project->team_id
+    // Compose databases inherit their team from the owning Service or Application.
     if ($resource instanceof ServiceDatabase) {
-        if ($resource->service?->environment?->project?->team_id === $teamId) {
+        if ($resource->parentResource()?->environment?->project?->team_id === $teamId) {
             return $resource;
         }
 
@@ -4617,6 +4617,9 @@ function parseDockerComposeFile(Service|Application $resource, bool $isNew = fal
 
             return $service;
         });
+        if ($pull_request_id === 0) {
+            $resource->syncComposeDatabases($services->toArray());
+        }
         if ($pull_request_id !== 0) {
             $services->each(function ($service, $serviceName) use ($pull_request_id, $services) {
                 $services[addPreviewDeploymentSuffix($serviceName, $pull_request_id)] = $service;

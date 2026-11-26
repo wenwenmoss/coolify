@@ -151,7 +151,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
             }
             if (data_get($this->backup, 'database_type') === ServiceDatabase::class) {
                 $this->database = data_get($this->backup, 'database');
-                $this->server = $this->database->service->server;
+                $this->server = $this->database->server();
             } else {
                 $this->database = data_get($this->backup, 'database');
                 // The coolify-db container always runs on the Coolify host, whatever its destination row says.
@@ -170,6 +170,12 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
 
             BackupCreated::dispatch($this->team->id);
 
+            if ($this->database instanceof ServiceDatabase && $this->database->application_id !== null && ! $this->database->isBackupSolutionAvailable()) {
+                $this->logSkippedRun('unsupported_database_type');
+
+                return;
+            }
+
             $status = str(data_get($this->database, 'status'));
             if (! $status->startsWith('running') && $this->database->id !== 0) {
                 $this->logSkippedRun('database_not_running', ['database_status' => (string) $status]);
@@ -184,14 +190,16 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
             }
             if (data_get($this->backup, 'database_type') === ServiceDatabase::class) {
                 $databaseType = $this->database->databaseType();
-                $serviceUuid = $this->database->service->uuid;
-                $serviceName = str($this->database->service->name)->slug();
-                $this->container_name = "{$this->database->name}-$serviceUuid";
+                $serviceName = str($this->database->parentResource()->name)->slug();
+                $this->container_name = $this->database->containerName();
                 if (! ValidationPatterns::isValidContainerName($this->container_name)) {
                     throw new \Exception('Invalid database container name.');
                 }
-                // The container name is validated above, so it is a safe folder name. Keep the folder of earlier releases.
-                $this->directory_name = $serviceName.'-'.$this->container_name;
+                if (! ValidationPatterns::isValidContainerName($this->database->backupContainerName())) {
+                    throw new \Exception('Invalid database backup directory name.');
+                }
+                // Keep Service backup folders and a stable Git Compose folder across deployments.
+                $this->directory_name = $serviceName.'-'.$this->database->backupContainerName();
                 $escapedContainerName = escapeshellarg($this->container_name);
                 $configuredDatabases = $this->configuredDatabasesToBackup();
                 if (str($databaseType)->contains('postgres')) {
@@ -1020,7 +1028,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
             $endpoint = $s3->endpoint;
             $s3->testConnection(shouldSave: true);
             if (data_get($this->backup, 'database_type') === ServiceDatabase::class) {
-                $network = $this->database->service->destination->network;
+                $network = $this->database->parentResource()->destination->network;
             } else {
                 $network = $this->database->destination->network;
             }
@@ -1198,7 +1206,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
 
         return $liveOperation
             || ResourceStartActivity::latestRunning($uuid) !== null
-            || ($this->database instanceof ServiceDatabase && ResourceStartActivity::latestRunning($this->database->service->uuid) !== null);
+            || ($this->database instanceof ServiceDatabase && ResourceStartActivity::latestRunning($this->database->parentResource()->uuid) !== null);
     }
 
     /**

@@ -1354,6 +1354,11 @@ class ServerTransferImporter
         $this->importPreviews(data_get($payload, 'previews', []), $application, $preserveUuids, $adoptMode, $teamId);
         $this->importSecretManagerLink(data_get($payload, 'secret_manager_link'), $application, "Application {$name}");
 
+        foreach (data_get($payload, 'compose_databases', []) as $dbPayload) {
+            $database = $this->importServiceDatabase($dbPayload, $application, $preserveUuids, $adoptMode, $teamId);
+            $this->serviceDatabaseMap[(string) data_get($dbPayload, 'uuid', $database->uuid)] = $database;
+        }
+
         return $application;
     }
 
@@ -1512,7 +1517,7 @@ class ServerTransferImporter
     /**
      * @param  array<string, mixed>  $dbPayload
      */
-    private function importServiceDatabase(array $dbPayload, Service $service, bool $preserveUuids, bool $adoptMode, int $teamId): ServiceDatabase
+    private function importServiceDatabase(array $dbPayload, Service|Application $service, bool $preserveUuids, bool $adoptMode, int $teamId): ServiceDatabase
     {
         $dbUuid = $preserveUuids && filled(data_get($dbPayload, 'uuid'))
             ? (string) data_get($dbPayload, 'uuid')
@@ -1527,9 +1532,9 @@ class ServerTransferImporter
                 'uuid', 'environment_variables', 'persistent_storages', 'file_storages', 'scheduled_backups', 'attributes',
             ])->all();
         }
-        unset($attributes['id'], $attributes['service_id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
+        unset($attributes['id'], $attributes['service_id'], $attributes['application_id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
         $attributes = $this->onlyExistingColumns(ServiceDatabase::class, $attributes);
-        $attributes['service_id'] = $service->id;
+        $attributes[$service instanceof Application ? 'application_id' : 'service_id'] = $service->id;
         $attributes['name'] = data_get($attributes, 'name') ?: data_get($dbPayload, 'name') ?: 'service-db';
         $attributes['status'] = $adoptMode
             ? (data_get($attributes, 'status') ?: data_get($dbPayload, 'status') ?: 'running:unknown')

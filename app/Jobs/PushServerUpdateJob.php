@@ -405,6 +405,12 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
 
         $this->trackPreviewRestartCounts();
 
+        foreach ($this->applications as $application) {
+            if ($application->build_pack === 'dockercompose' && $application->destination?->server_id === $this->server->id) {
+                $application->syncComposeDatabaseStatuses($this->applicationContainerStatuses->get($application->id, collect()));
+            }
+        }
+
         // Aggregate multi-container application statuses
         $this->aggregateMultiContainerStatuses();
 

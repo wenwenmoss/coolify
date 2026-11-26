@@ -164,6 +164,13 @@ beforeEach(function () {
     transferCoverageRecord(GithubRunnerConfig::class, ['server_id' => $this->server->id, 'github_app_id' => $githubApp->id, 'labels' => ['coverage']]);
     transferCoverageRecord(ServiceApplication::class, ['service_id' => $service->id]);
     transferCoverageRecord(ServiceDatabase::class, ['service_id' => $service->id]);
+    $composeDatabase = transferCoverageRecord(ServiceDatabase::class, [
+        'application_id' => $application->id, 'name' => 'git-db', 'image' => 'postgres:17',
+    ]);
+    transferCoverageRecord(ScheduledDatabaseBackup::class, [
+        ...$teamId, 'database_type' => ServiceDatabase::class, 'database_id' => $composeDatabase->id,
+        'frequency' => '0 3 * * *', 's3_storage_id' => $s3->id,
+    ]);
 
     $databases = collect(ServerTransferCoverage::TRANSFERRED)->keys()
         ->filter(fn (string $class) => str_starts_with(class_basename($class), 'Standalone') && ! in_array($class, [StandaloneDocker::class], true))

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\ServiceDatabase;
 use App\Models\User;
-use Illuminate\Support\Facades\Gate;
 
 class ServiceDatabasePolicy
 {
@@ -13,7 +12,7 @@ class ServiceDatabasePolicy
      */
     public function view(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return Gate::allows('view', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('view', $serviceDatabase->parentResource());
     }
 
     /**
@@ -29,7 +28,7 @@ class ServiceDatabasePolicy
      */
     public function update(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return Gate::allows('update', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('update', $serviceDatabase->parentResource());
     }
 
     /**
@@ -37,7 +36,7 @@ class ServiceDatabasePolicy
      */
     public function deploy(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return Gate::allows('deploy', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('deploy', $serviceDatabase->parentResource());
     }
 
     /**
@@ -45,7 +44,7 @@ class ServiceDatabasePolicy
      */
     public function delete(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return Gate::allows('delete', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('delete', $serviceDatabase->parentResource());
     }
 
     /**
@@ -69,7 +68,7 @@ class ServiceDatabasePolicy
      */
     public function manageBackups(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return Gate::allows('update', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('update', $serviceDatabase->parentResource());
     }
 
     /**
@@ -77,6 +76,6 @@ class ServiceDatabasePolicy
      */
     public function uploadBackup(User $user, ServiceDatabase $serviceDatabase): bool
     {
-        return $user->can('uploadBackup', $serviceDatabase->service);
+        return $serviceDatabase->parentResource() !== null && $user->can('uploadBackup', $serviceDatabase->parentResource());
     }
 }

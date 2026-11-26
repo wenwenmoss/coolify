@@ -227,7 +227,7 @@ class BackupExecutions extends Component
             $server = null;
 
             if ($this->database instanceof ServiceDatabase) {
-                $server = $this->database->service->destination->server;
+                $server = $this->database->server();
             } elseif ($this->database->destination && $this->database->destination->server) {
                 $server = $this->database->destination->server;
             }

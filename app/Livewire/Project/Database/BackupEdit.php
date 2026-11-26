@@ -238,7 +238,7 @@ class BackupEdit extends Component
         try {
             $server = null;
             if ($database instanceof ServiceDatabase) {
-                $server = $database->service->destination->server;
+                $server = $database->server();
             } elseif ($database->destination && $database->destination->server) {
                 $server = $database->destination->server;
             }
@@ -257,6 +257,16 @@ class BackupEdit extends Component
                 'database_name' => $database->name,
                 'backup_uuid' => $backupUuid,
             ]);
+
+            if ($database instanceof ServiceDatabase && $database->application_id !== null) {
+                $application = $database->application;
+
+                return redirectRoute($this, 'project.application.backup.index', [
+                    'project_uuid' => $application->environment->project->uuid,
+                    'environment_uuid' => $application->environment->uuid,
+                    'application_uuid' => $application->uuid,
+                ]);
+            }
 
             if ($database instanceof ServiceDatabase) {
                 return redirectRoute($this, 'project.service.database.backups', [

@@ -29,6 +29,7 @@ class ServerTransferBundle
         'environments' => 5000,
         'applications' => 5000,
         'databases' => 5000,
+        'compose_databases' => 5000,
         'services' => 2000,
         'previews' => 10000,
         'environment_variables' => 50000,
@@ -206,6 +207,9 @@ class ServerTransferBundle
 
                 foreach (self::items($environment['applications'] ?? null) as $a => $application) {
                     self::checkDomains($errors, "{$at}.applications.{$a}.fqdn", data_get($application, 'attributes.fqdn'));
+                    foreach (self::items($application['compose_databases'] ?? null) as $d => $database) {
+                        self::checkScheduledBackups($errors, "{$at}.applications.{$a}.compose_databases.{$d}", $database);
+                    }
                     self::checkComposeDomains($errors, "{$at}.applications.{$a}.docker_compose_domains", data_get($application, 'attributes.docker_compose_domains'));
                     self::checkStorages($errors, "{$at}.applications.{$a}", $application);
                     self::checkScheduledTasks($errors, "{$at}.applications.{$a}", $application);

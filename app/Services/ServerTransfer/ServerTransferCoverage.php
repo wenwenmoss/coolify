@@ -156,11 +156,17 @@ final class ServerTransferCoverage
             'projects.*.environments.*.databases.*.tags.*',
             'projects.*.environments.*.services.*.tags.*',
         ],
-        ScheduledDatabaseBackup::class => ['projects.*.environments.*.databases.*.scheduled_backups.*'],
+        ScheduledDatabaseBackup::class => [
+            'projects.*.environments.*.databases.*.scheduled_backups.*',
+            'projects.*.environments.*.applications.*.compose_databases.*.scheduled_backups.*',
+        ],
         ScheduledVolumeBackup::class => ['volume_backups.*'],
         Service::class => ['projects.*.environments.*.services.*'],
         ServiceApplication::class => ['projects.*.environments.*.services.*.applications.*'],
-        ServiceDatabase::class => ['projects.*.environments.*.services.*.databases.*'],
+        ServiceDatabase::class => [
+            'projects.*.environments.*.services.*.databases.*',
+            'projects.*.environments.*.applications.*.compose_databases.*',
+        ],
         StandalonePostgresql::class => ['projects.*.environments.*.databases.*'],
         StandaloneMysql::class => ['projects.*.environments.*.databases.*'],
         StandaloneMariadb::class => ['projects.*.environments.*.databases.*'],
@@ -295,7 +301,7 @@ final class ServerTransferCoverage
             'environment_id' => self::LINKED, 'server_id' => self::LINKED, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED,
         ],
         ServiceApplication::class => ['service_id' => self::LINKED, 'is_removed_from_compose' => self::FROM_COMPOSE],
-        ServiceDatabase::class => ['service_id' => self::LINKED, 'is_removed_from_compose' => self::FROM_COMPOSE],
+        ServiceDatabase::class => ['service_id' => self::LINKED, 'application_id' => self::LINKED, 'is_removed_from_compose' => self::FROM_COMPOSE],
         StandalonePostgresql::class => [
             'destination_type' => self::LINKED, 'destination_id' => self::LINKED, 'environment_id' => self::LINKED,
             'config_hash' => 'Calculated again when the target starts the database.',

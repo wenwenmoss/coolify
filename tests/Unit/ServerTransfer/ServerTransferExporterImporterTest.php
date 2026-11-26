@@ -2474,3 +2474,40 @@ test('the image scanner limits move with the server', function () {
         ->and($settings->image_scan_cpus)->toBe(2.0)
         ->and($settings->image_scan_memory_mb)->toBe(4096);
 });
+
+test('application compose databases and their backup schedules move with the server', function () {
+    $this->application->forceFill(['build_pack' => 'dockercompose'])->saveQuietly();
+    $storage = S3Storage::create([
+        'name' => 'Compose backup storage', 'team_id' => $this->team->id,
+        'region' => 'us-east-1', 'bucket' => 'backups',
+        'key' => 'test-key', 'secret' => 'test-secret',
+        'endpoint' => 'https://93.184.216.34',
+    ]);
+    $database = $this->application->databases()->create(['name' => 'db', 'image' => 'postgres:17']);
+    $schedule = $database->scheduledBackups()->create([
+        'team_id' => $this->team->id,
+        'frequency' => '0 3 * * *',
+        'databases_to_backup' => 'app',
+        'save_s3' => true,
+        's3_storage_id' => $storage->id,
+    ]);
+    $bundle = $this->exporter->export($this->server);
+    $payload = collect(data_get($bundle, 'projects.0.environments.0.applications'))->firstWhere('uuid', $this->application->uuid);
+    expect(data_get($payload, 'compose_databases.0.attributes.application_id'))->toBeNull();
+    expect(data_get($payload, 'compose_databases.0.scheduled_backups.0.uuid'))->toBe($schedule->uuid);
+
+    $applicationUuid = $this->application->uuid;
+    removeTransferSourceResources($this);
+    $targetTeam = Team::factory()->create();
+    $this->importer->import($bundle, teamId: $targetTeam->id);
+    $imported = Application::whereUuid($applicationUuid)->sole();
+    $importedDatabase = $imported->databases()->sole();
+    $importedBackup = $importedDatabase->scheduledBackups()->sole();
+
+    expect($importedDatabase->service_id)->toBeNull();
+    expect($importedDatabase->image)->toBe('postgres:17');
+    expect($importedBackup->frequency)->toBe('0 3 * * *');
+    expect($importedBackup->team_id)->toBe($targetTeam->id);
+    expect($importedBackup->s3->team_id)->toBe($targetTeam->id);
+    expect($importedBackup->s3->id)->not->toBe($storage->id);
+});

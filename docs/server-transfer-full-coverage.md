@@ -94,6 +94,7 @@ When you add a model or a setting to the transfer, add it to this file too.
 | ➕ | Nixpacks app, public GitHub repo | Expected: checklist step for manual webhooks |
 | ✅ | Static app (`is_static`, `is_spa`) | |
 | ➕ | Docker Compose app | raw compose on, one variable with an empty value (`preserve_compose_null`) |
+| ➕ | Git Docker Compose app with PostgreSQL or MySQL | create a database backup schedule with S3; after transfer, verify its database owner, schedule, and S3 storage on the application Backups page |
 | ➕ | Docker Compose app with a security update | an image override from the Security page (`docker_compose_image_overrides`); the target deploys the new image |
 | ➕ | App with GitHub App source, app with GitLab App source, app with deploy key | |
 | ➕ | Saved SSH host keys | app with a deploy key on a self-hosted Git host, deployed once, so Source → SSH host keys has a line. Expected: the same line on the target |

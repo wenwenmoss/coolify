@@ -97,6 +97,16 @@ class CreateScheduledBackup extends Component
                 'frequency' => $databaseBackup->frequency,
                 'save_s3' => (bool) $databaseBackup->save_s3,
             ]);
+            if ($database instanceof ServiceDatabase && $database->application_id !== null) {
+                $application = $database->application;
+
+                return redirectRoute($this, 'project.application.backup.index', [
+                    'project_uuid' => $application->environment->project->uuid,
+                    'environment_uuid' => $application->environment->uuid,
+                    'application_uuid' => $application->uuid,
+                ]);
+            }
+
             if ($database->getMorphClass() === ServiceDatabase::class) {
                 $service = $database->service;
                 $this->redirectRoute('project.service.volume-backups.index', [

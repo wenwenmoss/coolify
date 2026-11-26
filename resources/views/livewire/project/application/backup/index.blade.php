@@ -71,6 +71,32 @@
                 current-route="project.application.backup.index" />
 
             <div class="application-settings-form flex min-w-0 flex-col gap-6">
+            @foreach ($databases as $database)
+                <x-application.settings-section :title="$database->name.' database backups'"
+                    helper="Schedule database dumps or restore an existing backup.">
+                    @if ($database->is_removed_from_compose)
+                        <p>This database is no longer present in the Compose file. Its backups are kept.</p>
+                    @endif
+                    @if ($database->isBackupSolutionAvailable())
+                        @can('manageBackups', $database)
+                            <x-slot:actions>
+                                <x-modal-input title="Import backup" buttonTitle="Import backup">
+                                    <livewire:project.database.import :resource="$database"
+                                        wire:key="compose-database-import-{{ $database->uuid }}" />
+                                </x-modal-input>
+                                <x-modal-input title="New scheduled database backup" buttonTitle="Add">
+                                    <livewire:project.database.create-scheduled-backup :database="$database"
+                                        wire:key="compose-database-create-{{ $database->uuid }}" />
+                                </x-modal-input>
+                            </x-slot:actions>
+                        @endcan
+                    @endif
+                    <livewire:project.database.scheduled-backups :database="$database"
+                        wire:key="compose-database-schedules-{{ $database->uuid }}" />
+                    <livewire:project.database.backup.execution-history :database="$database"
+                        wire:key="compose-database-executions-{{ $database->uuid }}" />
+                </x-application.settings-section>
+            @endforeach
             <x-application.settings-section title="Storage backups"
                 helper="Schedule backups for persistent volumes and directory mounts attached to this application.">
                 @can('update', $application)

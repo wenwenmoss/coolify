@@ -2552,6 +2552,7 @@ function applicationParser(Application $resource, int $pull_request_id = 0, ?int
     $cleanedCompose = Yaml::dump(convertToArray($topLevel), 10, 2);
     // A preview parse keeps the Compose fields of the application: a preview can use the Compose file of its pull request.
     if (! $isPullRequest) {
+        $resource->syncComposeDatabases($services);
         $resource->docker_compose = $cleanedCompose;
     }
 
